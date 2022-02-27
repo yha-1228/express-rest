@@ -10,4 +10,6 @@ router.get('/:id', usersController.findOneById);
 
 router.post('/', usersValidator.create, usersController.create);
 
+router.post('/login', usersController.login);
+
 export default router;
