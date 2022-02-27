@@ -1,12 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
-import { HttpError } from 'http-errors';
+import createHttpError, { HttpError } from 'http-errors';
 
 const errorResponder = (err: unknown, req: Request, res: Response, next: NextFunction): void => {
   if (res.headersSent) {
     return next(err);
   }
 
-  if (err instanceof HttpError) {
+  if (createHttpError.isHttpError(err)) {
     res
       .status(err.statusCode)
       .send({ exception: { message: err.statusCode >= 500 ? 'Server error' : err.message } });
