@@ -1,14 +1,12 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { NextFunction, Request, Response } from 'express';
-import createHttpError from 'http-errors';
-import User from '../../models/User';
 import wrap from './helpers/wrap';
+import { getRepository } from 'typeorm';
+import User from '../../entity/User';
+import createHttpError from 'http-errors';
 import jwt from 'jsonwebtoken';
-import jwtConfig from '../../../config/jwt';
+import jwtConfig from '../../../config/jwtConfig';
 
-type CreateUserDto = { name: string; email: string; password: string };
+type CreateUserDto = { username: string; email: string; password: string };
 
 type LoginOptions = { email: string; password: string };
 
@@ -18,37 +16,34 @@ type LoginUserRequest = Request<unknown, unknown, LoginOptions>;
 
 const usersController = {
   findAll: wrap(async (req: Request, res: Response, next: NextFunction) => {
-    const users = await User.findAll();
+    const userRepository = getRepository(User);
+    const users = await userRepository.find();
+
     res.json(users);
   }),
 
-  findOneById: wrap(async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.id;
-    const user = await User.findByPk(userId);
-    if (!user) throw createHttpError(404, `Not Found:user id (${userId})`);
-
-    res.json(user);
-  }),
-
   create: wrap(async (req: CreateUserRequest, res: Response, next: NextFunction) => {
-    const createUserDto = req.body;
-    const user = await User.create(createUserDto);
-    res.json(user);
+    const user = new User();
+    user.email = req.body.email;
+    user.password = req.body.password;
+    user.username = req.body.username;
+
+    const userRepository = getRepository(User);
+    const createdUser = await userRepository.save(user);
+
+    res.json(createdUser);
   }),
 
   login: wrap(async (req: LoginUserRequest, res: Response, next: NextFunction) => {
-    const { email, password } = req.body;
+    const userRepository = getRepository(User);
 
-    const user = await User.findOne({ where: { email } });
-    if (!user) throw createHttpError(404, `Not Found:email=${email})`);
+    const user = await userRepository.findOne({ email: req.body.email });
+    if (!user) throw createHttpError(404, `Not Found:email=${req.body.email}`);
 
-    // @ts-ignore
-    const matchedPassword = user.password === password;
-
+    const matchedPassword = user.password === req.body.password;
     if (!matchedPassword) throw createHttpError(401);
 
-    // @ts-ignore
-    const payload = { id: user.id as string };
+    const payload = { id: user.id };
 
     const createdToken = jwt.sign(payload, jwtConfig.secretOrPrivateKey, {
       algorithm: 'HS256',

@@ -3,7 +3,7 @@ import { body, validationResult } from 'express-validator';
 
 const usersValidator = {
   create: [
-    body('name').isLength({ min: 1, max: 100 }),
+    body('username').isLength({ min: 1, max: 100 }),
     body('email').isEmail(),
     body('password').isLength({ min: 6, max: 20 }),
     (req: Request, res: Response, next: NextFunction) => {
