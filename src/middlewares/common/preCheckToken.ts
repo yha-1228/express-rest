@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import { getRepository } from 'typeorm';
 import jwtConfig from '../../../config/jwtConfig';
 import User from '../../entity/User';
-import { Decoded } from '../types';
+import { AuthenticatedUser, Decoded } from '../types';
 
 const preCheckToken = (req: Request, res: Response, next: NextFunction) => {
   const token = req.headers['x-access-token'];
@@ -15,21 +15,29 @@ const preCheckToken = (req: Request, res: Response, next: NextFunction) => {
 
   jwt.verify(token, jwtConfig.secretOrPrivateKey, (err, decoded) => {
     if (decoded) {
-      const typedPayload = decoded as Decoded;
+      const { id } = decoded as Decoded;
       const userRepository = getRepository(User);
 
       userRepository
-        .findOne(typedPayload.id)
+        .findOne(id)
         .then((user) => {
           if (!user) {
             return next(createHttpError(401, `Not found user`));
           }
 
+          const authenticatedUser: AuthenticatedUser = {
+            id: user.id,
+            email: user.email,
+            password: user.password,
+            username: user.username,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+          };
+
+          res.locals.authenticatedUser = authenticatedUser;
           next();
         })
-        .catch((err) => {
-          return next(err);
-        });
+        .catch(next);
     }
 
     if (err) {
