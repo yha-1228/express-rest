@@ -11,4 +11,6 @@ router.post('/', preCheckToken, usersValidator.create, usersController.create);
 
 router.post('/login', usersController.login);
 
+router.get('/token', preCheckToken, usersController.refreshToken);
+
 export default router;

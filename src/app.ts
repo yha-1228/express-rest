@@ -9,6 +9,7 @@ import errorLogHandlar from './middlewares/common/errorLogHandlar';
 import errorResponder from './middlewares/common/errorResponder';
 
 const app: express.Express = express();
+const baseURL = `/api`;
 
 // @ts-ignore 2/28現在ではtypes/nodeを入れるとここが型エラーになる
 app.use(express.json());
@@ -22,7 +23,7 @@ app.use(logger('dev'));
 app.use(cors(corsOptions));
 
 // API routes
-app.use('/api/users', usersApiRouter);
+app.use(`${baseURL}/users`, usersApiRouter);
 app.use(notFoundHandler);
 
 // Handle error

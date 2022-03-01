@@ -5,6 +5,7 @@ import User from '../../entity/User';
 import createHttpError from 'http-errors';
 import jwt from 'jsonwebtoken';
 import jwtConfig from '../../../config/jwtConfig';
+import { VerifiedResponse } from '../types';
 
 type CreateUserDto = { username: string; email: string; password: string };
 
@@ -42,6 +43,22 @@ const usersController = {
 
     const matchedPassword = user.password === req.body.password;
     if (!matchedPassword) throw createHttpError(401);
+
+    const payload = { id: user.id };
+
+    const createdToken = jwt.sign(payload, jwtConfig.secretOrPrivateKey, {
+      algorithm: 'HS256',
+      expiresIn: jwtConfig.expiresIn,
+    });
+
+    res.json({ token: createdToken });
+  }),
+
+  refreshToken: wrap(async (req: Request, res: VerifiedResponse, next: NextFunction) => {
+    const userRepository = getRepository(User);
+
+    const user = await userRepository.findOne(res.locals.authenticatedUser.id);
+    if (!user) throw createHttpError(404, `Not Found:id=${res.locals.authenticatedUser.id}`);
 
     const payload = { id: user.id };
 

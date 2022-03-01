@@ -1,7 +1,7 @@
 const config = {
-  secretOrPrivateKey: process.env.SERCRET_OR_PRYVATE_KEY || `iouzvy97iobvgfpaNEanH¥n`,
+  secretOrPrivateKey: process.env.JWT_SERCRET_OR_PRYVATE_KEY || `iouzvy97iobvgfpaNEanH¥n`,
   algorithm: 'HS256',
-  expiresIn: '60s',
+  expiresIn: `${process.env.JWT_LIMIT}s` || '60s',
 };
 
 export default config;
