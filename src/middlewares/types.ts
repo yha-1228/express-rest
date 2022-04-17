@@ -1,17 +1,11 @@
 import { Response } from 'express';
 import { JwtPayload } from 'jsonwebtoken';
+import User from '../entity/User';
 
-export type Decoded = JwtPayload & {
+export type Payload = {
   id: number;
 };
 
-export type AuthenticatedUser = {
-  id: number;
-  email: string;
-  password: string;
-  username: string;
-  createdAt: Date;
-  updatedAt: Date;
-};
+export type Decoded = JwtPayload & Payload;
 
-export type VerifiedResponse = Response<unknown, { authenticatedUser: AuthenticatedUser }>;
+export type VerifiedResponse = Response<unknown, { loggedInUser: User }>;

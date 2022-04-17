@@ -5,25 +5,39 @@ import User from '../../entity/User';
 import createHttpError from 'http-errors';
 import jwt from 'jsonwebtoken';
 import jwtConfig from '../../../config/jwtConfig';
-import { VerifiedResponse } from '../types';
+import { Payload, VerifiedResponse } from '../types';
 
-type CreateUserDto = { username: string; email: string; password: string };
+type UserCreateDto = { username: string; email: string; password: string };
 
-type LoginOptions = { email: string; password: string };
+type LoginReqBody = { email: string; password: string };
 
-type CreateUserRequest = Request<unknown, unknown, CreateUserDto>;
+type UserCreateRequest = Request<unknown, unknown, UserCreateDto>;
 
-type LoginUserRequest = Request<unknown, unknown, LoginOptions>;
+type LoginRequest = Request<unknown, unknown, LoginReqBody>;
+
+const mapUserToResponse = (user: User) => {
+  const { password, ...rest } = user;
+  return rest;
+};
+
+const generateToken = (payload: Payload) => {
+  return jwt.sign(payload, jwtConfig.secretOrPrivateKey, {
+    algorithm: 'HS256',
+    expiresIn: jwtConfig.expiresIn,
+  });
+};
 
 const usersController = {
   findAll: wrap(async (req: Request, res: Response, next: NextFunction) => {
     const userRepository = getRepository(User);
-    const users = await userRepository.find();
+    const users = await userRepository.find({
+      relations: ['dept'],
+    });
 
-    res.json(users);
+    res.json(users.map(mapUserToResponse));
   }),
 
-  create: wrap(async (req: CreateUserRequest, res: Response, next: NextFunction) => {
+  create: wrap(async (req: UserCreateRequest, res: Response, next: NextFunction) => {
     const user = new User();
     user.email = req.body.email;
     user.password = req.body.password;
@@ -35,7 +49,7 @@ const usersController = {
     res.json(createdUser);
   }),
 
-  login: wrap(async (req: LoginUserRequest, res: Response, next: NextFunction) => {
+  login: wrap(async (req: LoginRequest, res: Response, next: NextFunction) => {
     const userRepository = getRepository(User);
 
     const user = await userRepository.findOne({ email: req.body.email });
@@ -46,28 +60,18 @@ const usersController = {
 
     const payload = { id: user.id };
 
-    const createdToken = jwt.sign(payload, jwtConfig.secretOrPrivateKey, {
-      algorithm: 'HS256',
-      expiresIn: jwtConfig.expiresIn,
-    });
-
-    res.json({ token: createdToken });
+    res.json({ token: generateToken(payload) });
   }),
 
   refreshToken: wrap(async (req: Request, res: VerifiedResponse, next: NextFunction) => {
     const userRepository = getRepository(User);
 
-    const user = await userRepository.findOne(res.locals.authenticatedUser.id);
-    if (!user) throw createHttpError(404, `Not Found:id=${res.locals.authenticatedUser.id}`);
+    const user = await userRepository.findOne(res.locals.loggedInUser.id);
+    if (!user) throw createHttpError(404, `Not Found:id=${res.locals.loggedInUser.id}`);
 
     const payload = { id: user.id };
 
-    const createdToken = jwt.sign(payload, jwtConfig.secretOrPrivateKey, {
-      algorithm: 'HS256',
-      expiresIn: jwtConfig.expiresIn,
-    });
-
-    res.json({ token: createdToken });
+    res.json({ token: generateToken(payload) });
   }),
 };
 

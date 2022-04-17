@@ -7,9 +7,9 @@ import usersApiRouter from './routes/api/users';
 import notFoundHandler from './middlewares/common/notFoundHandlar';
 import errorLogHandlar from './middlewares/common/errorLogHandlar';
 import errorResponder from './middlewares/common/errorResponder';
+import { baseURL } from './constants';
 
 const app: express.Express = express();
-const baseURL = `/api`;
 
 // @ts-ignore 2/28現在ではtypes/nodeを入れるとここが型エラーになる
 app.use(express.json());
