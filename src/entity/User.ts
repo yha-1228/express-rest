@@ -2,10 +2,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  OneToOne,
   PrimaryGeneratedColumn,
   Unique,
   UpdateDateColumn,
 } from 'typeorm';
+import Dept from './Dept';
 
 @Entity('users')
 @Unique(['email'])
@@ -22,9 +25,15 @@ export default class User {
   @Column()
   username!: string;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @OneToOne((type) => Dept, {
+    cascade: true,
+  })
+  @JoinColumn()
+  dept!: Dept;
+
+  @CreateDateColumn()
   readonly createdAt!: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn()
   readonly updatedAt!: Date;
 }
