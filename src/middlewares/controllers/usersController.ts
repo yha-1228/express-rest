@@ -15,7 +15,7 @@ type UserCreateRequest = Request<unknown, unknown, UserCreateDto>;
 
 type LoginRequest = Request<unknown, unknown, LoginReqBody>;
 
-const mapUserToResponse = (user: User) => {
+const removePasswordField = (user: User) => {
   const { password, ...rest } = user;
   return rest;
 };
@@ -34,7 +34,7 @@ const usersController = {
       relations: ['dept'],
     });
 
-    res.json(users.map(mapUserToResponse));
+    res.json(users.map(removePasswordField));
   }),
 
   create: wrap(async (req: UserCreateRequest, res: Response, next: NextFunction) => {
@@ -46,7 +46,7 @@ const usersController = {
     const userRepository = getRepository(User);
     const createdUser = await userRepository.save(user);
 
-    res.json(createdUser);
+    res.json(removePasswordField(createdUser));
   }),
 
   login: wrap(async (req: LoginRequest, res: Response, next: NextFunction) => {
