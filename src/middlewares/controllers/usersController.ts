@@ -15,7 +15,7 @@ type UserCreateRequest = Request<unknown, unknown, UserCreateDto>;
 
 type LoginRequest = Request<unknown, unknown, LoginReqBody>;
 
-const removePasswordField = (user: User) => {
+const removePasswordField = (user: User): Omit<User, 'password'> => {
   const { password, ...rest } = user;
   return rest;
 };
